@@ -9,7 +9,7 @@
 /* Both input and output file names can be "-" to signify standard 	*/
 /*   input or standard output respectively.				*/
 
-char *Version = "@(#) bsed 1.0, November 16, 1989";
+char *Version = "@(#) bsed 1.99, June 28, 2014";
 
 #include <stdio.h>
 #include <stdlib.h>
