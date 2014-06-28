@@ -1,0 +1,8 @@
+Bsed is a simple binary stream editor that can do substitutions on binary
+files.  See "toolman bsed" for details.
+
+Bsed is now available in World-Wide Exptools, with a home page of
+    http://www.bell-labs.com/wwexptools/bsed/
+
+If you have any questions or suggestions, contact the author
+Dave Dykstra <dwd@bell-labs.com>.

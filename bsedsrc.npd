@@ -1,0 +1,10 @@
+nsbPackageDescription: 1
+paths:
+    Makefile
+    bsed.c
+    bsed.1
+    *.npd
+    COPYING
+    bsed.sh
+    bsed.news
+    homepage/

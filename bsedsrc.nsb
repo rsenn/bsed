@@ -1,0 +1,69 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+
+nsbFile: 1
+generatedBy: NSBD version 1.6 patchlevel 2003/09/26 04:08:57
+generatedAt: Wed, 30 Jun 2004 16:23:42 GMT
+package: bsedsrc
+version: 1.0
+nsbUrl: rsync://www.bell-labs.com/wwexptools/sources/%P/%P.nsb
+topUrl: rsync://www.bell-labs.com/wwexptools/sources/%P
+regSubs:
+    ^ bsed/
+paths:
+    Makefile
+	length: 539
+	md5: f2d57c7ae60e443c1bd486daa02672f5
+	mtime: 1025636594
+    bsed.c
+	length: 10472
+	md5: 3e3701e59e12b41e5945766711f8ab7b
+	mtime: 1088610683
+    bsed.1
+	length: 2351
+	md5: db78fbe1fc40805f15bfb8de4f198769
+	mtime: 1016143672
+    bsedsrc.npd
+	length: 129
+	md5: de567be54f15789393211de9a04bcd91
+	mtime: 1088612617
+    bsed.npd
+	length: 301
+	md5: 52f0e77d3e2ea2c7a6fbe85d36ffc4e0
+	mtime: 1025636594
+    COPYING
+	length: 11692
+	md5: 58e3ec3a319efcf04d6b45f6151a66a1
+	mtime: 1088610783
+    bsed.sh
+	length: 146
+	md5: 033cf70ac362fda02e7614cd49e16074
+	mode: rwx
+	mtime: 1088612576
+    bsed.news
+	length: 323
+	md5: bf827f9902ce7728bd241750bdda92d9
+	mtime: 1088612598
+    homepage/
+    homepage/bsedman.html
+	length: 3065
+	md5: 843a16938f179a9500d60228079f8d51
+	mtime: 1025636594
+    homepage/index.html
+	length: 946
+	md5: 7dde70557a53b988d77bdd075a9505b1
+	mtime: 1025636594
+maintainers:
+    Peter Fales <psfales@lucent.com>
+	pgpKeyUrl: rsync://www.bell-labs.com/wwexptools/keys/psfales.txt
+    Lucent Central Exptools Administrator <exptools@lucent.com>
+	pgpKeyUrl: rsync://www.bell-labs.com/wwexptools/keys/exptools.txt
+    Dave Dykstra <dwd@bell-labs.com>
+	pgpKeyUrl: rsync://www.bell-labs.com/wwexptools/keys/dwd.txt
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2-exptools3 (GNU/Linux)
+
+iD8DBQFA4ukR2BFa/I0QOZwRAmOZAJ4n9AKAIiLzU1VODzf73I7pVcnjNgCghlPN
+poXEBrOMy3nN5EqTYgX5TcU=
+=3wxE
+-----END PGP SIGNATURE-----

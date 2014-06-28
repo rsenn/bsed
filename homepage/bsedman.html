@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<TITLE>bsed man page</TITLE>
+</HEAD>
+<BODY>
+<H1>bsed man page</H1>
+<HR>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+
+
+</PRE>
+<H2>NAME</H2><PRE>
+     bsed - binary stream editor
+
+
+</PRE>
+<H2>SYNOPSIS</H2><PRE>
+     <B>bsed</B> [-vsw] [-m [min-]max] search=replace infile outfile
+     <B>bsed</B> [-vsw] [-m [min-]max] search infile
+
+
+</PRE>
+<H2>DESCRIPTION</H2><PRE>
+     <B>bsed</B> searches for a binary string in a file.  If  a  replace
+     string  is  given,  <B>bsed</B> copies infile to outfile, replacing
+     all instances of the search string with the replace string.
+
+     If infile is '-', input is from standard input;  if  outfile
+     is '-', output is to standard output.
+
+     Both the search and the replace strings can contain a combi-
+     nation of ascii characters and hex numbers. The following is
+     the algorithm used:  If the string begins with a  digit  (0-
+     9),  assume  a hex number is beginning.  Continue converting
+     hex digits (0-f) into binary until a non-hex  digit  begins,
+     unless the string began with "0x" or "0x": in that case just
+     throw away the 0x.  Every 2 hex  digits  makes  a  byte;  if
+     there  is  an odd number then the last digit is taken as the
+     low nibble of a byte.  Anytime a  backslash  ()  is  encoun-
+     tered,  consider  it to be a break in the conversion process
+     and treat it as  if  starting  a  new  string.   If  another
+     backslash  is  immediately following it, insert a backslash.
+     Once converting an  ascii  string,  continue  converting  it
+     until a backslash or end of string.
+
+     NOTE: be sure to escape the backslash from the shell.
+
+
+</PRE>
+<H2>OPTIONS</H2><PRE>
+     -v   verbose option.  First lists the search  (and  replace)
+          string in a hex-ascii dump format:  each byte is listed
+          first in hex, followed by the ascii for each  printable
+          character or "." for each non-printing character.  Next
+          it gives a hex-ascii dump of the context of each  match
+          of  the  search  string, with the position of the match
+          into the file (in hex) in the middle of the dump.  Out-
+          put is to stderr.
+
+     -s   Normally <B>bsed</B>  will  list  the  number  of  matches  to
+          stderr.  This option suppresses that.
+
+     -w   Normally <B>bsed</B> will  warn  if  the  search  and  replace
+          strings   are   not   the  same  length.   This  option
+          suppresses that warning.
+
+     -m [min-]max
+          Normally <B>bsed</B> will find all the matches of  the  search
+          string.  This option specifies a range of match numbers
+
+
+          to use.  The default mininimum is number 1.   Both  min
+          and max are in decimal.
+
+
+</PRE>
+<H2>EXAMPLES</H2><PRE>
+     bsed -v "ab\0xa" testfile
+
+     bsed -sw "data\0=fonts\0" testfile - | od -cx
+
+     bsed -v -m5-5 "012345=0xa\bc" testfile testout
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

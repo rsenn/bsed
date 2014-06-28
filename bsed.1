@@ -1,0 +1,66 @@
+.tr ~
+.TH BSED 1 EXPTOOLS
+.SH NAME
+bsed - binary stream editor
+.SH SYNOPSIS
+.B bsed
+[-vsw] [-m [min-]max] search=replace infile outfile
+.br
+.B bsed
+[-vsw] [-m [min-]max] search infile
+.SH DESCRIPTION
+.B bsed
+searches for a binary string in a file.  If a replace string is given,
+.B bsed
+copies infile to outfile, replacing all instances of the search string
+with the replace string.
+.P
+If infile is '-', input is from standard input; if outfile is '-',
+output is to standard output.
+.P
+Both the search and the replace strings can contain a combination of
+ascii characters and hex numbers. The following is the algorithm used:
+If the string begins with a digit (0-9), assume a hex number is 
+beginning.  Continue converting hex digits (0-f) into binary
+until a non-hex digit begins, unless the string began with
+"0x" or "0x": in that case just throw away the 0x.  Every
+2 hex digits makes a byte; if there is an odd number then
+the last digit is taken as the low nibble of a byte.  Anytime
+a backslash (\) is encountered, consider it to be a break
+in the conversion process and treat it as if starting a new
+string.  If another backslash is immediately following it,
+insert a backslash.  Once converting an ascii string, continue
+converting it until a backslash or end of string.
+.P
+NOTE: be sure to escape the backslash from the shell.
+.SH OPTIONS
+.IP "-v" 5
+verbose option.  First lists the search (and replace) string in a
+hex-ascii dump format:  each byte is listed first in hex, followed
+by the ascii for each printable character or "." for each non-printing
+character.  Next it gives a hex-ascii dump of the context of each
+match of the search string, with the position of the match into
+the file (in hex) in the middle of the dump.
+Output is to stderr.
+.IP "-s" 5
+Normally 
+.B bsed
+will list the number of matches to stderr.  This option suppresses that.
+.IP "-w" 5
+Normally
+.B bsed
+will warn if the search and replace strings are not the same length.
+This option suppresses that warning.
+.IP "-m [min-]max" 5
+Normally
+.B bsed
+will find all the matches of the search string.  This option specifies
+a range of match numbers to use.  The default mininimum is number 1.
+Both min and max are in decimal.
+.SH EXAMPLES
+.P
+bsed -v "ab\\0xa" testfile
+.P
+bsed -sw "data\\0=fonts\\0" testfile - | od -cx
+.P
+bsed -v -m5-5 "012345=0xa\\bc" testfile testout

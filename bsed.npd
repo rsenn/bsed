@@ -1,0 +1,15 @@
+nsbPackageDescription: 1
+paths:
+    bsed%X.%E
+    bsed.1
+    bsed.news
+    bsed.sh
+regSubs:
+    (bsed.*).%E lib/bsed/\1
+pathSubs:
+    bsed.1 man/man1/bsed.1
+    bsed.news lib/toolnews/bsed
+    bsed.sh bin/bsed
+updateParameters:
+    counters bsed
+    homePage http://www.bell-labs.com/wwexptools/bsed/
