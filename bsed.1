@@ -4,10 +4,10 @@
 bsed - binary stream editor
 .SH SYNOPSIS
 .B bsed
-[-vsw] [-m [min-]max] search=replace infile outfile
+[-vswz] [-m [min-]max] search=replace infile outfile
 .br
 .B bsed
-[-vsw] [-m [min-]max] search infile
+[-vswz] [-m [min-]max] search infile
 .SH DESCRIPTION
 .B bsed
 searches for a binary string in a file.  If a replace string is given,
@@ -51,6 +51,11 @@ Normally
 .B bsed
 will warn if the search and replace strings are not the same length.
 This option suppresses that warning.
+.IP "-z" 5
+If the search and replace strings are not the same length, the shorter will
+be zero-padded to fit the longer one.
+.IP "-0" 5
+Assume both, search and replace strings, to be nul-terminated.
 .IP "-m [min-]max" 5
 Normally
 .B bsed

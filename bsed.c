@@ -12,18 +12,20 @@
 char *Version = "@(#) bsed 1.0, November 16, 1989";
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 
-unsigned char *arg0;		/* program name argv[0] */
+char *arg0;		/* program name argv[0] */
 
 FILE *ifile,*ofile;		/* input and output files */
-unsigned char *ifilenm,*ofilenm; /* input and output file names */
+char *ifilenm,*ofilenm; /* input and output file names */
 #define REPLACESIZE	128	/* maximum replacement string size */
 unsigned char *search;		/* search string */
-unsigned char sbuf[REPLACESIZE+1]; /* search string buffer */
+unsigned char sbuf[REPLACESIZE+1+1]; /* search string buffer */
 int slen;			/* search string length */
 unsigned char *replace;		/* replace string */
-unsigned char rbuf[REPLACESIZE+1]; /* replace string buffer */
+unsigned char rbuf[REPLACESIZE+1+1]; /* replace string buffer */
 int rlen;			/* replace string length */
 
 int silent = 0;			/* silent flag */
@@ -32,6 +34,8 @@ int verbose = 0;		/* verbose flag */
 int minmatch = 1;		/* minimum match count */
 int maxmatch = -1;		/* maxmatch count */
 int match = 0;			/* match count */
+int zeropad = 0;    /* zero-pad replacement string if it is smaller */
+int nulterm = 0;   /* zero-terminate both strings */
 
 #define CTXTSIZE	5	/* size of left and right context  */
 unsigned char ltxt[CTXTSIZE+1],rtxt[CTXTSIZE+1];
@@ -40,6 +44,9 @@ int rtlen = 0;
 
 int stack[REPLACESIZE+CTXTSIZE+1]; /* saved character stack */
 int topstack = 0;
+
+static int convert(unsigned char *s,unsigned char *o);
+static unsigned char *dump(unsigned char *str,int len);
 
 #define mygetc()	((topstack == 0) ? getc(ifile) : stack[--topstack])
 #define myungetc(c)	(stack[topstack++] = c)
@@ -59,19 +66,18 @@ int topstack = 0;
 			} while(0);
 #endif
 
-usage()
+void usage()
 {
     fprintf(stderr,
-"Usage:\t%s [-vsw] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
+"Usage:\t%s [-0vswz] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
 							arg0);
     fprintf(stderr,
-      "\t%s [-vsw] [-m [minmatch-]maxmatch] search infile\n",arg0);
+      "\t%s [-0vswz] [-m [minmatch-]maxmatch] search infile\n",arg0);
     fprintf(stderr, "%s\n", Version);
     exit(2);
 }
 
-main(argc,argv)
-unsigned char **argv;
+int main(int argc,char *argv[])
 {
     register int c;
     register long cnt;
@@ -81,7 +87,7 @@ unsigned char **argv;
     extern int optind;
     int errflg = 0;
 
-    if ((arg0 = (unsigned char *) strrchr(*argv,'/')) == NULL)
+    if ((arg0 = strrchr(*argv,'/')) == NULL)
 	arg0 = *argv;
     else
 	arg0++;
@@ -90,7 +96,7 @@ unsigned char **argv;
     ofilenm = NULL;
     ofile = NULL;
 
-    while ((c = getopt(argc, argv, "svwm:")) != EOF)
+    while ((c = getopt(argc, (char**)argv, "svwm:z0")) != EOF)
     {
 	switch (c)
 	{
@@ -102,6 +108,12 @@ unsigned char **argv;
 	    break;
 	case 'v':
 	    verbose++;
+	    break;
+	case 'z':
+	    zeropad++;
+	    break;
+	case '0':
+	    nulterm++;
 	    break;
 	case 'm':
 	    if ((c = sscanf(optarg,"%d-%d",&minmatch,&maxmatch)) <= 0)
@@ -140,10 +152,10 @@ unsigned char **argv;
     if (argc < 2)
 	usage();
 
-    search = *argv++;
+    search = (unsigned char *)*argv++;
     ifilenm = *argv++;
 
-    if ((s = (unsigned char *) strchr(search,'=')) != NULL)
+    if ((s = (unsigned char *) strchr((char*)search,'=')) != NULL)
     {
 	if (argc != 3)
 	    usage();
@@ -183,11 +195,37 @@ unsigned char **argv;
 	    fprintf(stderr,"%s: null replace string\n",arg0);
 	    usage();
 	}
-	if ((slen != rlen) && !nowarn)
+      if(nulterm)
+      {
+        sbuf[slen++] = '\0';
+        rbuf[rlen++] = '\0';
+      }
+      if((slen != rlen))
+      {
+        if(zeropad)
+        {
+          if(rlen < slen)
+          {
+            memset(&rbuf[rlen], 0, slen - rlen);
+            rlen = slen;
+          }
+          if(rlen > slen)
+          {
+            memset(&sbuf[slen], 0, rlen - slen);
+            slen = rlen;
+            if(!nowarn)
+              fprintf(stderr,
+                      "%s: warning: zero-padding search string. this is probably not what you intended.\n",
+                      arg0);
+          }
+        }
+        else if(!nowarn)
 	    fprintf(stderr,
 		"%s: warning: search and replace strings not same length\n",
 				arg0);
     }
+    }  
+      
     if (verbose)
     {
 	fprintf(stderr,"search\t%s\n",dump(search,slen));
@@ -255,7 +293,7 @@ unsigned char **argv;
 			if (verbose)
 			{
 			    register unsigned char *p;
-			    register int c;
+			    register int c=0;
 
 			    /* read next few characters for right context */
 			    rtlen = 0;
@@ -357,9 +395,7 @@ unsigned char **argv;
 				     (((c) >= 'A') && ((c) <= 'F')))
 #define hexval(c)	(isnum(c) ? ((c) & 0xf) : (((c) & 0xf) + 9))
 
-convert(s,o)
-register unsigned char *s;
-register unsigned char *o;
+int convert(unsigned char *s,unsigned char *o)
 {
     register unsigned char *p;
     register unsigned char c,t;
@@ -445,9 +481,7 @@ register unsigned char *o;
 #define isprint(c)	(((c) >= ' ') && ((c) <= '~'))
 
 unsigned char *
-dump(str,len)
-unsigned char *str;
-register int len;
+dump(unsigned char *str,int len)
 {
     static unsigned char buf[NUMDUMP*4+1];
     register unsigned char c,*p,*s,*end;
@@ -477,3 +511,4 @@ register int len;
     *p++ = '\0';
     return(&buf[0]);
 }
+  
