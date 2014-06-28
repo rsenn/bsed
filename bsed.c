@@ -22,12 +22,12 @@ char *arg0;		/* program name argv[0] */
 
 FILE *ifile,*ofile;		/* input and output files */
 char *ifilenm,*ofilenm; /* input and output file names */
-#define REPLACESIZE	128	/* maximum replacement string size */
+int alen;			/* allocation length */
 unsigned char *search;		/* search string */
-unsigned char sbuf[REPLACESIZE+1+1]; /* search string buffer */
+unsigned char *sbuf; /* search string buffer */
 int slen;			/* search string length */
 unsigned char *replace;		/* replace string */
-unsigned char rbuf[REPLACESIZE+1+1]; /* replace string buffer */
+unsigned char *rbuf; /* replace string buffer */
 int rlen;			/* replace string length */
 
 int silent = 0;			/* silent flag */
@@ -39,6 +39,7 @@ int maxmatch = -1;		/* maxmatch count */
 int match = 0;			/* match count */
 int zeropad = 0;    /* zero-pad replacement string if it is smaller */
 int nulterm = 0;   /* zero-terminate both strings */
+int widechar = 0;   /* search/replace strings are 16-bit wide chars */
 
 #define CTXTSIZE	5	/* size of left and right context  */
 unsigned char ltxt[CTXTSIZE+1],rtxt[CTXTSIZE+1];
@@ -99,7 +100,7 @@ int main(int argc,char *argv[])
     ofilenm = NULL;
     ofile = NULL;
 
-    while ((c = getopt(argc, (char**)argv, "isvwm:z0")) != EOF)
+    while ((c = getopt(argc, (char**)argv, "isvwm:z0u")) != EOF)
     {
 	switch (c)
 	{
@@ -120,6 +121,9 @@ int main(int argc,char *argv[])
 	    break;
 	case '0':
 	    nulterm++;
+	    break;
+	case 'u':
+	    widechar++;
 	    break;
 	case 'm':
 	    if ((c = sscanf(optarg,"%d-%d",&minmatch,&maxmatch)) <= 0)
@@ -179,6 +183,9 @@ int main(int argc,char *argv[])
 	replace = NULL;
     }
 
+	alen = strlen(search)*2+1;
+	sbuf = alloca(slen);
+	
     if ((slen = convert(search,sbuf)) == -1)
     {
 	fprintf(stderr,"%s: search string too long\n",arg0);
@@ -193,6 +200,7 @@ int main(int argc,char *argv[])
 
     if (replace != NULL)
     {
+    rbuf = alloca(alen);
 	if ((rlen = convert(replace, rbuf)) == -1)
 	{
 	    fprintf(stderr,"%s: replace string too long\n",arg0);
@@ -422,7 +430,7 @@ int convert(unsigned char *s,unsigned char *o)
     register unsigned char *end;
 
     p = o;
-    end = p + REPLACESIZE;
+    end = p + alen;
     c = *s++;
     while (c != '\0')
     {
@@ -456,6 +464,8 @@ int convert(unsigned char *s,unsigned char *o)
 		}
 	    }
 	    *p++ = t;
+	    if(widechar)
+			*p++ = '\0';
 	}
 	else if (c == '\\')
 	{
@@ -464,6 +474,8 @@ int convert(unsigned char *s,unsigned char *o)
 	    {
 		/* if double backslash put in backslash */
 		*p++ = c;
+	    if(widechar)
+			*p++ = '\0';
 		c = *s++;
 	    }
 	}
@@ -473,6 +485,8 @@ int convert(unsigned char *s,unsigned char *o)
 	    do
 	    {
 		*p++ = c;
+	    if(widechar)
+			*p++ = '\0';
 		if (p >= end)
 		    return( -1);
 		c = *s++;
