@@ -17,6 +17,7 @@ char *Version = "@(#) bsed 1.0, November 16, 1989";
 #include <getopt.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <unistd.h>
 
 char *arg0;		/* program name argv[0] */
 
@@ -86,8 +87,6 @@ int main(int argc,char *argv[])
     register long cnt;
     register unsigned char *s;
     unsigned char *dump();
-    extern char *optarg;
-    extern int optind;
     int errflg = 0;
 
     if ((arg0 = strrchr(*argv,'/')) == NULL)
