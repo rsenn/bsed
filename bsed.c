@@ -15,6 +15,8 @@ char *Version = "@(#) bsed 1.0, November 16, 1989";
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <sys/stat.h>
+#include <limits.h>
 
 char *arg0;		/* program name argv[0] */
 
@@ -31,6 +33,7 @@ int rlen;			/* replace string length */
 int silent = 0;			/* silent flag */
 int nowarn = 0;			/* nowarn flag */
 int verbose = 0;		/* verbose flag */
+int inplace = 0;    /* inplace flag */
 int minmatch = 1;		/* minimum match count */
 int maxmatch = -1;		/* maxmatch count */
 int match = 0;			/* match count */
@@ -69,10 +72,10 @@ static unsigned char *dump(unsigned char *str,int len);
 void usage()
 {
     fprintf(stderr,
-"Usage:\t%s [-0vswz] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
+"Usage:\t%s [-0ivswz] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
 							arg0);
     fprintf(stderr,
-      "\t%s [-0vswz] [-m [minmatch-]maxmatch] search infile\n",arg0);
+      "\t%s [-0ivswz] [-m [minmatch-]maxmatch] search infile\n",arg0);
     fprintf(stderr, "%s\n", Version);
     exit(2);
 }
@@ -96,12 +99,15 @@ int main(int argc,char *argv[])
     ofilenm = NULL;
     ofile = NULL;
 
-    while ((c = getopt(argc, (char**)argv, "svwm:z0")) != EOF)
+    while ((c = getopt(argc, (char**)argv, "isvwm:z0")) != EOF)
     {
 	switch (c)
 	{
 	case 's':
 	    silent++;
+	    break;
+	case 'i':
+	    inplace++;
 	    break;
 	case 'w':
 	    nowarn++;
@@ -157,9 +163,12 @@ int main(int argc,char *argv[])
 
     if ((s = (unsigned char *) strchr((char*)search,'=')) != NULL)
     {
-	if (argc != 3)
+	static char outnm[PATH_MAX+1];
+	if (argc != 3 && !inplace)
 	    usage();
-	ofilenm = *argv;
+   strncpy(outnm, ifilenm, PATH_MAX);
+   strncat(outnm, ".bsed", PATH_MAX);
+   ofilenm = (inplace ? outnm : *argv);
 	*s = '\0';
 	replace = s + 1;
     }
@@ -363,6 +372,17 @@ int main(int argc,char *argv[])
     if (!silent)
 	fprintf(stderr,"%d %s\n",match,(match == 1 ? "match" : "matches"));
 
+  if(inplace)
+  {
+    struct stat st;
+    fstat(fileno(ifile), &st);
+    fclose(ifile);
+    unlink(ifilenm);
+    chmod(ofilenm, st.st_mode);
+    if(geteuid() == 0)
+      chown(ofilenm, st.st_uid, st.st_gid);
+    rename(ofilenm, ifilenm);
+  }
     return (match <= 0 ? 1 : 0);
 }
 
