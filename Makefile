@@ -12,7 +12,7 @@ CC = gcc
 CFLAGS = -g -O2 -Wall
 INSTALL = install
 
-.PHONY: all doc-html
+.PHONY: all doc-html install clean
 
 all: bsed doc-html
 
@@ -35,4 +35,6 @@ install: bsed doc-html
 	$(INSTALL) -m 644 bsed.1 $(DESTDIR)$(man1dir)
 	$(INSTALL) -d $(DESTDIR)$(pkgdocdir)
 	$(INSTALL) -m 644 homepage/bsedman.html homepage/index.html $(DESTDIR)$(pkgdocdir)
-	
+
+clean:
+	$(RM) bsed.o bsed
