@@ -46,7 +46,7 @@ unsigned char ltxt[CTXTSIZE+1],rtxt[CTXTSIZE+1];
 int ltlen = 0;
 int rtlen = 0;
 
-int stack[REPLACESIZE+CTXTSIZE+1]; /* saved character stack */
+int *stack; /* saved character stack */
 int topstack = 0;
 
 static int convert(unsigned char *s,unsigned char *o);
@@ -73,10 +73,10 @@ static unsigned char *dump(unsigned char *str,int len);
 void usage()
 {
     fprintf(stderr,
-"Usage:\t%s [-0ivswz] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
+"Usage:\t%s [-0ivswzu] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
 							arg0);
     fprintf(stderr,
-      "\t%s [-0ivswz] [-m [minmatch-]maxmatch] search infile\n",arg0);
+      "\t%s [-0ivswzu] [-m [minmatch-]maxmatch] search infile\n",arg0);
     fprintf(stderr, "%s\n", Version);
     exit(2);
 }
@@ -184,6 +184,7 @@ int main(int argc,char *argv[])
     }
 
 	alen = strlen(search)*2+1;
+	stack = alloca((alen+CTXTSIZE+1)*sizeof(int));
 	sbuf = alloca(slen);
 	
     if ((slen = convert(search,sbuf)) == -1)
@@ -284,9 +285,11 @@ int main(int argc,char *argv[])
 	{
 	    register long savcnt;
 	    register unsigned char *end;
-	    static int savbuf[REPLACESIZE];
+	    static int *savbuf = 0;
 	    int savlen;
-
+	    
+	    if(!savbuf)
+			savbuf = malloc(alen * sizeof(int));
 
 	    savcnt = cnt;
 	    savlen = 0;
@@ -510,15 +513,18 @@ int convert(unsigned char *s,unsigned char *o)
 *
 ***********************************************************************/
 
-#define NUMDUMP REPLACESIZE
+#define NUMDUMP alen
 #define ascval(c)	(((c) < 10) ? ((c) + '0') : ((c) - 10 + 'a'))
 #define isprint(c)	(((c) >= ' ') && ((c) <= '~'))
 
 unsigned char *
 dump(unsigned char *str,int len)
 {
-    static unsigned char buf[NUMDUMP*4+1];
+    static unsigned char *buf;
     register unsigned char c,*p,*s,*end;
+    
+    if(!buf)
+		buf = malloc((NUMDUMP*4+1));
 
     if (len > NUMDUMP)
 	len = NUMDUMP;
