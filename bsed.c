@@ -37,6 +37,7 @@ int verbose = 0;		/* verbose flag */
 int inplace = 0;    /* inplace flag */
 int minmatch = 1;		/* minimum match count */
 int maxmatch = -1;		/* maxmatch count */
+int numbytes = -1;		/* numbytes count */
 int match = 0;			/* match count */
 int zeropad = 0;    /* zero-pad replacement string if it is smaller */
 int nulterm = 0;   /* zero-terminate both strings */
@@ -98,7 +99,7 @@ int main(int argc,char *argv[])
     ofilenm = NULL;
     ofile = NULL;
 
-    while ((c = getopt(argc, (char**)argv, "isvwm:z0")) != EOF)
+    while ((c = getopt(argc, (char**)argv, "isvwm:n:z0")) != EOF)
     {
 	switch (c)
 	{
@@ -116,6 +117,10 @@ int main(int argc,char *argv[])
 	    break;
 	case 'z':
 	    zeropad++;
+	    break;
+	case 'n':
+	     if(sscanf(optarg,"%d",&numbytes) <= 0)
+				 numbytes = -1;
 	    break;
 	case '0':
 	    nulterm++;
@@ -271,7 +276,7 @@ int main(int argc,char *argv[])
     do
     {
 	cnt++;
-	if (((c = mygetc()) == *s) && ((maxmatch < 0 ) || (match < maxmatch)))
+	if (((c = mygetc()) == *s) && ((maxmatch < 0 ) || (match < maxmatch)) && (numbytes < 0 || (numbytes >= cnt)))
 	{
 	    register long savcnt;
 	    register unsigned char *end;
