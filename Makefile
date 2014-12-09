@@ -1,7 +1,12 @@
 PACKAGE = bsed
 VERSION = 1.0
 
+ifeq ($(shell uname -o),Msys)
+prefix = /usr
+else
 prefix = /usr/local
+endif
+
 bindir = ${prefix}/bin
 datadir = ${prefix}/share
 docdir = $(datadir)/doc

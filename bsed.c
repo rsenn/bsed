@@ -9,7 +9,7 @@
 /* Both input and output file names can be "-" to signify standard 	*/
 /*   input or standard output respectively.				*/
 
-char *Version = "@(#) bsed 1.99, June 28, 2014";
+char *Version = "@(#) bsed 1.999, Dec 10, 2014";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +18,7 @@ char *Version = "@(#) bsed 1.99, June 28, 2014";
 #include <sys/stat.h>
 #include <limits.h>
 #include <unistd.h>
+#include <alloca.h>
 
 char *arg0;		/* program name argv[0] */
 
@@ -87,7 +88,7 @@ int main(int argc,char *argv[])
     register int c;
     register long cnt;
     register unsigned char *s;
-    unsigned char *dump();
+    //unsigned char *dump();
     int errflg = 0;
 
     if ((arg0 = strrchr(*argv,'/')) == NULL)
@@ -122,7 +123,7 @@ int main(int argc,char *argv[])
 	    nulterm++;
 	    break;
 	case 'u':
-	    widechar++;
+	    widechar = 1;
 	    break;
 	case 'm':
 	    if ((c = sscanf(optarg,"%d-%d",&minmatch,&maxmatch)) <= 0)
@@ -467,7 +468,7 @@ int convert(unsigned char *s,unsigned char *o)
 	    }
 	    *p++ = t;
 	    if(widechar)
-			*p++ = '\0';
+			  *p++ = '\0';
 	}
 	else if (c == '\\')
 	{
