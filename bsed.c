@@ -183,7 +183,7 @@ int main(int argc,char *argv[])
 	replace = NULL;
     }
 
-	alen = strlen(search)*2+1;
+	alen = strlen((char*)search)*2+1;
 	stack = alloca((alen+CTXTSIZE+1)*sizeof(int));
 	sbuf = alloca(slen);
 	
