@@ -1,10 +1,16 @@
 PACKAGE = bsed
 VERSION = 1.0
 
-ifeq ($(shell uname -o),Msys)
+OS := $(shell uname -o)
+
+ifeq ($(OS),Msys)
+prefix = /usr
+else
+ifeq ($(OS),Cygwin)
 prefix = /usr
 else
 prefix = /usr/local
+endif
 endif
 
 bindir = ${prefix}/bin
