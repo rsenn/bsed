@@ -5,33 +5,61 @@ project(bsed)
 
 include(CheckIncludeFile)
 
-#check_include_file(inttypes.h HAVE_INTTYPES_H)
-#check_include_file(stdint.h HAVE_STDINT_H)
-#check_include_file(libgen.h HAVE_LIBGEN_H)
-#check_include_file(alloca.h HAVE_ALLOCA_H)
-#check_include_file(sys/stat.h HAVE_SYS_STAT_H)
-#check_include_file(boost/foreach.hpp HAVE_BOOST_FOREACH_HPP)
-#check_include_file(xtr1common HAVE_XTR1COMMON)
-#check_include_file(initializer_list HAVE_INITIALIZER_LIST)
-#
+check_include_file(getopt.h HAVE_GETOPT_H)
+check_include_file(unistd.h HAVE_UNISTD_H)
+check_include_file(alloca.h HAVE_ALLOCA_H)
+check_include_file(string.h HAVE_STRING_H)
+
+if(HAVE_ALLOCA_H)
+	add_definitions(-DHAVE_ALLOCA_H=${HAVE_ALLOCA_H})
+endif()
+
+if(HAVE_STRING_H)
+	add_definitions(-DHAVE_STRING_H=${HAVE_STRING_H})
+endif()
+
+if(NOT HAVE_GETOPT_H)
+  set(GETOPT_SOURCES getopt.c getopt.h)
+endif()
+
+include_directories("${CMAKE_SOURCE_DIR}")
+
 #include(CheckTypeSize)
 #
 #check_type_size(loff_t LOFF_T)
 #check_type_size(lloff_t LLOFF_T)
 #check_type_size(off64_t OFF64_T)
-#
-#include(CheckFunctionExists)
-#
-#check_function_exists(alloca HAVE_ALLOCA_FUNC)
-#check_function_exists(stat HAVE_STAT_FUNC)
-#check_function_exists(lstat HAVE_LSTAT_FUNC)
-#check_function_exists(lseek HAVE_LSEEK_FUNC)
-#check_function_exists(llseek HAVE_LLSEEK_FUNC)
-#check_function_exists(lseek64 HAVE_LSEEK64_FUNC)
-#
+
+include(CheckFunctionExists)
+
+if(MINGW)
+  set(HAVE_ALLOCA_FUNC TRUE)
+else()
+check_function_exists(alloca HAVE_ALLOCA_FUNC)
+endif()
+
+check_function_exists(geteuid HAVE_GETEUID_FUNC)
+check_function_exists(chown HAVE_CHOWN_FUNC)
+
+if(NOT HAVE_ALLOCA_FUNC)
+  add_definitions(-DNO_ALLOCA_FUNC=1)
+endif()
+
+if(NOT HAVE_GETEUID_FUNC)
+  add_definitions(-DNO_GETEUID_FUNC=1)
+endif()
+
+if(NOT HAVE_CHOWN_FUNC)
+  add_definitions(-DNO_CHOWN_FUNC=1)
+endif()
+
+if(MSVC)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS=1 -wd4996)
+endif()
+
 #configure_file("${CMAKE_SOURCE_DIR}/config.h.cmake"
 #               "${CMAKE_BINARY_DIR}/config.h")
 #
 
-add_executable(bsed bsed.c)
+add_executable(bsed bsed.c ${GETOPT_SOURCES})
 install(TARGETS bsed DESTINATION bin) 

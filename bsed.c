@@ -17,20 +17,36 @@ char *Version = "@(#) bsed 1.999, Dec 10, 2014";
 #include <getopt.h>
 #include <sys/stat.h>
 #include <limits.h>
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+#if defined(NO_ALLOCA_FUNC) && !defined(HAVE_ALLOCA_H)
+#define alloca malloc
+#elif defined(HAVE_ALLOCA_H)
 #include <alloca.h>
+#endif
+
+#ifndef PATH_MAX
+# ifdef MAX_PATH
+#  define PATH_MAX MAX_PATH
+# else
+#  define PATH_MAX 4096
+# endif
+#endif
 
 char *arg0;		/* program name argv[0] */
 
 FILE *ifile,*ofile;		/* input and output files */
 char *ifilenm,*ofilenm; /* input and output file names */
-int alen;			/* allocation length */
+size_t alen;			/* allocation length */
 unsigned char *search;		/* search string */
 unsigned char *sbuf; /* search string buffer */
-int slen;			/* search string length */
+size_t slen;			/* search string length */
 unsigned char *replace;		/* replace string */
 unsigned char *rbuf; /* replace string buffer */
-int rlen;			/* replace string length */
+size_t rlen;			/* replace string length */
 
 int silent = 0;			/* silent flag */
 int nowarn = 0;			/* nowarn flag */
@@ -51,8 +67,8 @@ int rtlen = 0;
 int *stack; /* saved character stack */
 int topstack = 0;
 
-static int convert(unsigned char *s,unsigned char *o);
-static unsigned char *dump(unsigned char *str,int len);
+static size_t convert(unsigned char *s,unsigned char *o);
+static unsigned char *dump(unsigned char *str,size_t len);
 
 #define mygetc()	((topstack == 0) ? getc(ifile) : stack[--topstack])
 #define myungetc(c)	(stack[topstack++] = c)
@@ -390,8 +406,12 @@ int main(int argc,char *argv[])
     fclose(ifile);
     unlink(ifilenm);
     chmod(ofilenm, st.st_mode);
+#ifndef NO_GETEUID_FUNC
     if(geteuid() == 0)
+#endif
+#ifndef NO_CHOWN_FUNC
       chown(ofilenm, st.st_uid, st.st_gid);
+#endif
     rename(ofilenm, ifilenm);
   }
     return (match <= 0 ? 1 : 0);
@@ -426,7 +446,7 @@ int main(int argc,char *argv[])
 				     (((c) >= 'A') && ((c) <= 'F')))
 #define hexval(c)	(isnum(c) ? ((c) & 0xf) : (((c) & 0xf) + 9))
 
-int convert(unsigned char *s,unsigned char *o)
+size_t convert(unsigned char *s,unsigned char *o)
 {
     register unsigned char *p;
     register unsigned char c,t;
@@ -515,10 +535,13 @@ int convert(unsigned char *s,unsigned char *o)
 
 #define NUMDUMP alen
 #define ascval(c)	(((c) < 10) ? ((c) + '0') : ((c) - 10 + 'a'))
+
+#ifndef isprint
 #define isprint(c)	(((c) >= ' ') && ((c) <= '~'))
+#endif
 
 unsigned char *
-dump(unsigned char *str,int len)
+dump(unsigned char *str,size_t len)
 {
     static unsigned char *buf;
     register unsigned char c,*p,*s,*end;
