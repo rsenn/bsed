@@ -87,7 +87,7 @@ int main(int argc,char *argv[])
     register int c;
     register long cnt;
     register unsigned char *s;
-    unsigned char *dump();
+    unsigned char *dump(unsigned char *,int);
     int errflg = 0;
 
     if ((arg0 = strrchr(*argv,'/')) == NULL)
@@ -182,7 +182,7 @@ int main(int argc,char *argv[])
 	replace = NULL;
     }
 
-	alen = strlen(search)*2+1;
+	alen = strlen((const char*)search)*2+1;
 	stack = alloca((alen+CTXTSIZE+1)*sizeof(int));
 	sbuf = alloca(slen);
 	
@@ -389,8 +389,11 @@ int main(int argc,char *argv[])
     fclose(ifile);
     unlink(ifilenm);
     chmod(ofilenm, st.st_mode);
+
+#ifndef WIN32
     if(geteuid() == 0)
       chown(ofilenm, st.st_uid, st.st_gid);
+#endif
     rename(ofilenm, ifilenm);
   }
     return (match <= 0 ? 1 : 0);
