@@ -23,12 +23,12 @@ char *arg0;		/* program name argv[0] */
 
 FILE *ifile,*ofile;		/* input and output files */
 char *ifilenm,*ofilenm; /* input and output file names */
-int alen;			/* allocation length */
+#define REPLACESIZE	128	/* maximum replacement string size */
 unsigned char *search;		/* search string */
-unsigned char *sbuf; /* search string buffer */
+unsigned char sbuf[REPLACESIZE+1+1]; /* search string buffer */
 int slen;			/* search string length */
 unsigned char *replace;		/* replace string */
-unsigned char *rbuf; /* replace string buffer */
+unsigned char rbuf[REPLACESIZE+1+1]; /* replace string buffer */
 int rlen;			/* replace string length */
 
 int silent = 0;			/* silent flag */
@@ -40,14 +40,13 @@ int maxmatch = -1;		/* maxmatch count */
 int match = 0;			/* match count */
 int zeropad = 0;    /* zero-pad replacement string if it is smaller */
 int nulterm = 0;   /* zero-terminate both strings */
-int widechar = 0;   /* search/replace strings are 16-bit wide chars */
 
 #define CTXTSIZE	5	/* size of left and right context  */
 unsigned char ltxt[CTXTSIZE+1],rtxt[CTXTSIZE+1];
 int ltlen = 0;
 int rtlen = 0;
 
-int *stack; /* saved character stack */
+int stack[REPLACESIZE+CTXTSIZE+1]; /* saved character stack */
 int topstack = 0;
 
 static int convert(unsigned char *s,unsigned char *o);
@@ -74,10 +73,10 @@ static unsigned char *dump(unsigned char *str,int len);
 void usage()
 {
     fprintf(stderr,
-"Usage:\t%s [-0ivswzu] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
+"Usage:\t%s [-0ivswz] [-m [minmatch-]maxmatch] search=replace infile outfile\n",
 							arg0);
     fprintf(stderr,
-      "\t%s [-0ivswzu] [-m [minmatch-]maxmatch] search infile\n",arg0);
+      "\t%s [-0ivswz] [-m [minmatch-]maxmatch] search infile\n",arg0);
     fprintf(stderr, "%s\n", Version);
     exit(2);
 }
@@ -99,7 +98,7 @@ int main(int argc,char *argv[])
     ofilenm = NULL;
     ofile = NULL;
 
-    while ((c = getopt(argc, (char**)argv, "isvwm:z0u")) != EOF)
+    while ((c = getopt(argc, (char**)argv, "isvwm:z0")) != EOF)
     {
 	switch (c)
 	{
@@ -120,9 +119,6 @@ int main(int argc,char *argv[])
 	    break;
 	case '0':
 	    nulterm++;
-	    break;
-	case 'u':
-	    widechar++;
 	    break;
 	case 'm':
 	    if ((c = sscanf(optarg,"%d-%d",&minmatch,&maxmatch)) <= 0)
@@ -182,10 +178,6 @@ int main(int argc,char *argv[])
 	replace = NULL;
     }
 
-	alen = strlen((const char*)search)*2+1;
-	stack = alloca((alen+CTXTSIZE+1)*sizeof(int));
-	sbuf = alloca(slen);
-	
     if ((slen = convert(search,sbuf)) == -1)
     {
 	fprintf(stderr,"%s: search string too long\n",arg0);
@@ -200,7 +192,6 @@ int main(int argc,char *argv[])
 
     if (replace != NULL)
     {
-    rbuf = alloca(alen);
 	if ((rlen = convert(replace, rbuf)) == -1)
 	{
 	    fprintf(stderr,"%s: replace string too long\n",arg0);
@@ -284,11 +275,9 @@ int main(int argc,char *argv[])
 	{
 	    register long savcnt;
 	    register unsigned char *end;
-	    static int *savbuf = 0;
+	    static int savbuf[REPLACESIZE];
 	    int savlen;
-	    
-	    if(!savbuf)
-			savbuf = malloc(alen * sizeof(int));
+
 
 	    savcnt = cnt;
 	    savlen = 0;
@@ -435,7 +424,7 @@ int convert(unsigned char *s,unsigned char *o)
     register unsigned char *end;
 
     p = o;
-    end = p + alen;
+    end = p + REPLACESIZE;
     c = *s++;
     while (c != '\0')
     {
@@ -469,8 +458,6 @@ int convert(unsigned char *s,unsigned char *o)
 		}
 	    }
 	    *p++ = t;
-	    if(widechar)
-			*p++ = '\0';
 	}
 	else if (c == '\\')
 	{
@@ -479,8 +466,6 @@ int convert(unsigned char *s,unsigned char *o)
 	    {
 		/* if double backslash put in backslash */
 		*p++ = c;
-	    if(widechar)
-			*p++ = '\0';
 		c = *s++;
 	    }
 	}
@@ -490,8 +475,6 @@ int convert(unsigned char *s,unsigned char *o)
 	    do
 	    {
 		*p++ = c;
-	    if(widechar)
-			*p++ = '\0';
 		if (p >= end)
 		    return( -1);
 		c = *s++;
@@ -515,18 +498,15 @@ int convert(unsigned char *s,unsigned char *o)
 *
 ***********************************************************************/
 
-#define NUMDUMP alen
+#define NUMDUMP REPLACESIZE
 #define ascval(c)	(((c) < 10) ? ((c) + '0') : ((c) - 10 + 'a'))
 #define isprint(c)	(((c) >= ' ') && ((c) <= '~'))
 
 unsigned char *
 dump(unsigned char *str,int len)
 {
-    static unsigned char *buf;
+    static unsigned char buf[NUMDUMP*4+1];
     register unsigned char c,*p,*s,*end;
-    
-    if(!buf)
-		buf = malloc((NUMDUMP*4+1));
 
     if (len > NUMDUMP)
 	len = NUMDUMP;
