@@ -6,7 +6,7 @@ bindir = ${prefix}/bin
 datadir = ${prefix}/share
 docdir = $(datadir)/doc
 pkgdocdir = $(datadir)/doc/bsed
-man1dir = $(datadir)/man/man1
+man1dir = $(datadir)/share/man/man1
 
 CC = gcc
 CFLAGS = -g -O2 -Wall
